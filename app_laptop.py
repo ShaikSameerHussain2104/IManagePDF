@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, send_file
 from PyPDF2 import PdfMerger
-import subprocess
+from pptx import Presentation
 import os
+import aspose.slides as slides
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -36,21 +37,13 @@ def upload_file():
         return f"File uploaded successfully: {filename}"
     return 'Invalid file type'
 
-# Helper function to convert PPT to PDF using LibreOffice
+# Helper function to convert PPT to PDF (Windows only)
 def convert_ppt_to_pdf(ppt_file, pdf_file):
     try:
-        # Command to convert PPT to PDF using LibreOffice in headless mode
-        command = [
-            'libreoffice',
-            '--headless',   # run in headless mode (no GUI)
-            '--convert-to', 'pdf',  # specify PDF format
-            '--outdir', os.path.dirname(pdf_file),  # output directory
-            ppt_file  # input file
-        ]
-        
-        # Execute the command
-        subprocess.run(command, check=True)
-
+        # Load the presentation from the PPT file
+        with slides.Presentation(ppt_file) as pres:
+            # Save the presentation as a PDF file
+            pres.save(pdf_file, slides.export.SaveFormat.PDF)
     except Exception as e:
         raise RuntimeError(f"Error converting PPT to PDF: {e}")
 
@@ -121,6 +114,37 @@ def convert_merge_ppt_to_pdf():
         merger.write(f)
     
     return send_file(output, as_attachment=True, download_name='merged_ppt_to_pdf.pdf')
+
+@app.route('/convert_pdf_to_ppt', methods=['POST'])
+def convert_pdf_to_ppt():
+    file = request.files['pdf_to_ppt']  # Ensure this matches the form field name in HTML
+    if not file or file.filename == '':
+        return 'No file selected'
+
+    filename = secure_filename(file.filename)
+    pdf_path = os.path.join(UPLOAD_FOLDER, filename)
+    ppt_filename = f"{os.path.splitext(filename)[0]}.pptx"
+    ppt_path = os.path.join(UPLOAD_FOLDER, ppt_filename)
+
+    # Save uploaded PDF file
+    file.save(pdf_path)
+
+    try:
+        # Create presentation object
+        with slides.Presentation() as pres:
+            # Remove default slide
+            pres.slides.remove_at(0)
+
+            # Import PDF to presentation
+            pres.slides.add_from_pdf(pdf_path)
+
+            # Save the presentation as PPTX
+            pres.save(ppt_path, slides.export.SaveFormat.PPTX)
+
+        return send_file(ppt_path, as_attachment=True, download_name=ppt_filename)
+
+    except Exception as e:
+        return f"Error during conversion: {e}"
 
 if __name__ == '__main__':
     app.run(debug=True)
