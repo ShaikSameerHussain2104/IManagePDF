@@ -1,17 +1,9 @@
 from flask import Flask, request, render_template, send_file
 from PyPDF2 import PdfMerger
 from pptx import Presentation
-from PyPDF2 import PdfReader
-from reportlab.pdfgen import canvas
-from io import BytesIO
 import os
 import aspose.slides as slides
-from pptx.util import Inches, Pt
-import fitz
-import platform
-import pythoncom
 from werkzeug.utils import secure_filename
-import comtypes.client
 
 app = Flask(__name__)
 
@@ -70,7 +62,6 @@ def merge_pdfs():
     return send_file(output, as_attachment=True, download_name='merged.pdf')
 
 @app.route('/convert_ppt_to_pdf', methods=['POST'])
-
 def convert_ppt_to_pdf_route():
     file = request.files['ppt']
     if not file or file.filename == '':
@@ -123,6 +114,7 @@ def convert_merge_ppt_to_pdf():
         merger.write(f)
     
     return send_file(output, as_attachment=True, download_name='merged_ppt_to_pdf.pdf')
+
 @app.route('/convert_pdf_to_ppt', methods=['POST'])
 def convert_pdf_to_ppt():
     file = request.files['pdf_to_ppt']  # Ensure this matches the form field name in HTML
@@ -153,7 +145,6 @@ def convert_pdf_to_ppt():
 
     except Exception as e:
         return f"Error during conversion: {e}"
-    
 
 if __name__ == '__main__':
     app.run(debug=True)
