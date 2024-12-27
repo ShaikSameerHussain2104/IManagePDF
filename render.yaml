@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ppt-pdf-converter
+    env: python
+    region: oregon  # Replace with your desired region, e.g., 'singapore'
+    plan: free
+    buildCommand: |
+      apt-get update && apt-get install -y libicu-dev
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+        value: '1'
+    disk:
+      - name: uploads
+        mountPath: /app/uploads
