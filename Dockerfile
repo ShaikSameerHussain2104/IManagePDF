@@ -1,8 +1,8 @@
 # Use the official Python image from Docker Hub
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 # Set environment variables
-ENV LIBREOFFICE_VERSION=7.4.3.2
+ENV LIBREOFFICE_VERSION=24.8.4.2
 
 # Install required system dependencies including LibreOffice and other packages
 RUN apt-get update && \
